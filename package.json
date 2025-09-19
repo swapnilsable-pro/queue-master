@@ -1,0 +1,29 @@
+{
+  "name": "queue-master",
+  "version": "1.0.0",
+  "description": "Node.js queue management service for Nerdy Jukebox",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "graphql",
+    "apollo",
+    "queue",
+    "jukebox"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/server": "^5.0.0",
+    "@apollo/subgraph": "^2.11.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "graphql": "^16.11.0",
+    "graphql-tag": "^2.12.6",
+    "node-fetch": "^3.3.2"
+  }
+}
