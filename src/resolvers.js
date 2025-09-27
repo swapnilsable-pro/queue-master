@@ -1,4 +1,5 @@
 import { queueStore } from './queueStore.js';
+import { kafkaService } from './kafkaService.js';
 
 export const resolvers = {
   Query: {
@@ -16,11 +17,20 @@ export const resolvers = {
   },
 
   Mutation: {
-    queueSong: (_, { songId }) => {
+    queueSong: async (_, { songId }) => {
       console.log(`🎵 Queueing song: ${songId}`);
       try {
+        // 1. Update the database
         const queueItem = queueStore.addSong(songId);
         console.log(`✅ Song ${songId} added to queue at position ${queueItem.position}`);
+        
+        // 2. Publish Kafka event
+        await kafkaService.publishSongQueued(songId, queueItem);
+        
+        // 3. Publish queue updated event
+        const updatedQueue = queueStore.getQueue();
+        await kafkaService.publishQueueUpdated(updatedQueue);
+        
         return queueItem;
       } catch (error) {
         console.error(`❌ Error queueing song ${songId}:`, error.message);
@@ -28,11 +38,20 @@ export const resolvers = {
       }
     },
 
-    upvoteSong: (_, { songId }) => {
+    upvoteSong: async (_, { songId }) => {
       console.log(`👍 Upvoting song: ${songId}`);
       try {
+        // 1. Update the database
         const queueItem = queueStore.upvoteSong(songId);
         console.log(`✅ Song ${songId} upvoted, now has ${queueItem.votes} votes at position ${queueItem.position}`);
+        
+        // 2. Publish Kafka event
+        await kafkaService.publishSongUpvoted(songId, queueItem);
+        
+        // 3. Publish queue updated event (queue order might have changed)
+        const updatedQueue = queueStore.getQueue();
+        await kafkaService.publishQueueUpdated(updatedQueue);
+        
         return queueItem;
       } catch (error) {
         console.error(`❌ Error upvoting song ${songId}:`, error.message);
@@ -40,11 +59,20 @@ export const resolvers = {
       }
     },
 
-    downvoteSong: (_, { songId }) => {
+    downvoteSong: async (_, { songId }) => {
       console.log(`👎 Downvoting song: ${songId}`);
       try {
+        // 1. Update the database
         const queueItem = queueStore.downvoteSong(songId);
         console.log(`✅ Song ${songId} downvoted, now has ${queueItem.votes} votes at position ${queueItem.position}`);
+        
+        // 2. Publish Kafka event
+        await kafkaService.publishSongDownvoted(songId, queueItem);
+        
+        // 3. Publish queue updated event (queue order might have changed)
+        const updatedQueue = queueStore.getQueue();
+        await kafkaService.publishQueueUpdated(updatedQueue);
+        
         return queueItem;
       } catch (error) {
         console.error(`❌ Error downvoting song ${songId}:`, error.message);

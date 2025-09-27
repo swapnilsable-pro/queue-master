@@ -3,8 +3,13 @@ import { startStandaloneServer } from '@apollo/server/standalone';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { typeDefs } from './schema.js';
 import { resolvers } from './resolvers.js';
+import { kafkaService } from './kafkaService.js';
 
 async function startServer() {
+  // Initialize Kafka connection first
+  console.log('🔌 Connecting to Kafka...');
+  await kafkaService.connect();
+
   // Create Apollo Server with federation support
   const server = new ApolloServer({
     schema: buildSubgraphSchema({ typeDefs, resolvers }),
@@ -49,8 +54,15 @@ async function startServer() {
 }
 
 // Handle graceful shutdown
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('\n🛑 Queue Master shutting down...');
+  await kafkaService.disconnect();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Queue Master shutting down...');
+  await kafkaService.disconnect();
   process.exit(0);
 });
 
